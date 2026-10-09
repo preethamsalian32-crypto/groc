@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>FreshCart Grocery</title>
+
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;font-family:Arial}
+    body{background:#f5faf6;color:#1f2937}
+
+    header{
+      background:#166534;color:white;padding:14px 5%;
+      position:sticky;top:0;z-index:50;
+      display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;
+    }
+
+    .delivery-badge{
+      background:#facc15;color:#111827;padding:8px 13px;border-radius:20px;font-weight:bold;
+      font-size:13px;white-space:nowrap
+    }
+
+    .logo{font-size:23px;font-weight:bold;white-space:nowrap}
+
+    /* Top-left single menu (NO cart inside it) */
+    .menu-wrap{position:relative}
+    .menu-btn{background:white;color:#166534;border:none;border-radius:10px;padding:10px 12px;font-weight:bold;cursor:pointer}
+    #topMenu{
+      position:absolute;left:0;top:46px;display:none;
+      width:260px;background:white;border-radius:12px;box-shadow:0 12px 30px rgba(0,0,0,.12);
+      overflow:hidden;z-index:999
+    }
+    #topMenu.open{display:block}
+    .menu-item{
+      width:100%;text-align:left;padding:12px 14px;border:0;background:white;cursor:pointer;font-weight:bold;color:#111827
+    }
+    .menu-item:hover{background:#ecfdf5}
+
+    /* Cart button OUTSIDE the menu - right top */
+    .top-right-actions{display:flex;align-items:center;gap:12px}
+    .cart-btn{
+      background:white;color:#166534;border:none;border-radius:10px;padding:10px 12px;
+      font-weight:bold;cursor:pointer;white-space:nowrap;
+      display:flex;align-items:center;gap:10px
+    }
+    .cart-btn .count{
+      background:#dcfce7;color:#166534;border-radius:999px;padding:2px 8px;
+      font-size:13px;font-weight:900
+    }
+
+    .page{display:none}
+    .page.active{display:block}
+
+    .container{width:90%;max-width:1250px;margin:30px auto}
+    .title{text-align:center;color:#14532d;margin:28px 0 18px}
+    .hero{text-align:center;padding:45px 20px;background:linear-gradient(120deg,#dcfce7,#fef3c7)}
+    .hero h1{font-size:40px;color:#14532d;margin-bottom:10px}
+
+    .primary{background:#16a34a;color:white;border:0;border-radius:7px;padding:10px 14px;cursor:pointer;font-weight:bold}
+    .secondary{background:#dcfce7;color:#166534;border:0;border-radius:7px;padding:10px 14px;cursor:pointer;font-weight:bold}
+
+    .box{max-width:760px;margin:30px auto;background:white;padding:25px;border-radius:12px;box-shadow:0 3px 14px #0001}
+    .banner{width:90%;max-width:1250px;margin:25px auto;padding:22px;border-radius:14px;color:white;background:linear-gradient(120deg,#9d174d,#f97316)}
+    .offer-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:18px;margin-top:16px}
+    .offer{background:#ffffff2b;border:1px solid #ffffff55;padding:15px;border-radius:9px}
+
+    .controls{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0}
+    input,select,textarea{padding:12px;border:1px solid #cbd5e1;border-radius:7px;font-size:15px}
+    textarea{resize:vertical}
+
+    .products{display:grid;grid-template-columns:repeat(auto-fit,minmax(205px,1fr));gap:18px}
+    .card{background:white;border-radius:10px;overflow:hidden;box-shadow:0 3px 12px #0001}
+    .card img{width:100%;height:145px;object-fit:cover}
+    .card-body{padding:13px}
+    .card h3{color:#14532d;margin-bottom:6px;font-size:17px}
+    .card p{font-size:13px;color:#64748b;margin:5px 0}
+    .price{color:#15803d;font-weight:bold;font-size:18px}
+    .old{text-decoration:line-through;color:#94a3b8;font-size:13px;margin-left:6px}
+    .discount{display:inline-block;background:#dc2626;color:white;padding:4px 6px;border-radius:4px;font-size:11px;margin-top:6px}
+    .add{width:100%;margin-top:10px;background:#166534;color:white;border:0;border-radius:7px;padding:10px;cursor:pointer;font-weight:bold}
+
+    .form{display:grid;gap:12px}
+
+    .cart-item{
+      background:white;margin:12px 0;padding:15px;border-radius:8px;display:flex;align-items:center;justify-content:space-between;gap:10px;
+      box-shadow:0 2px 8px #0001;flex-wrap:wrap
+    }
+    .cart-left{display:flex;flex-direction:column;gap:6px}
+    .qty{display:flex;align-items:center;gap:10px}
+    .qty button{width:30px;height:30px;border:0;border-radius:6px;background:#dcfce7;color:#166534;font-weight:bold;cursor:pointer}
+    .remove{border:0;border-radius:7px;background:#fee2e2;color:#b91c1c;padding:8px 10px;cursor:pointer;font-weight:bold}
+    .total{background:#166534;color:white;padding:18px;border-radius:9px;text-align:right;font-size:20px}
+
+    /* Chatbot */
+    .chat-icon{
+      position:fixed;right:20px;bottom:20px;width:54px;height:54px;border-radius:50%;
+      background:#16a34a;color:white;font-size:24px;border:0;cursor:pointer;z-index:60;box-shadow:0 4px 13px rgba(0,0,0,.25)
+    }
+    #chatbot{display:none;position:fixed;right:20px;bottom:85px;width:330px;background:white;border-radius:12px;overflow:hidden;box-shadow:0 5px 25px rgba(0,0,0,.25);z-index:60}
+    #chatbot.open{display:block}
+    .chat-head{background:#166534;color:white;padding:13px;display:flex;align-items:center;justify-content:space-between;font-weight:bold}
+    .close-chat{border:0;background:transparent;color:white;font-size:20px;cursor:pointer}
+    .chat-messages{height:240px;overflow:auto;padding:12px;font-size:14px}
+    .msg{padding:8px 10px;border-radius:8px;margin:7px 0;max-width:92%}
+    .bot{background:#dcfce7}
+    .user{background:#dbeafe;margin-left:auto}
+    .chat-input{border-top:1px solid #e5e7eb;display:flex}
+    .chat-input input{border:0;outline:none;flex:1;padding:12px}
+    .chat-input button{border:0;background:#16a34a;color:white;padding:0 14px;cursor:pointer}
+
+    footer{background:#14532d;color:white;text-align:center;padding:20px;margin-top:30px}
+
+    @media(max-width:700px){
+      .hero h1{font-size:29px}
+      #chatbot{width:calc(100% - 30px);right:15px}
+      .logo{font-size:18px}
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <div style="display:flex;align-items:center;gap:12px;min-width:240px;">
+      <div class="menu-wrap">
+        <button class="menu-btn" onclick="toggleMenu()" aria-label="Open menu">☰ Menu</button>
+        <div id="topMenu">
+          <button class="menu-item" onclick="go('home')">🛍️ Shop (Home)</button>
+          <button class="menu-item" onclick="go('subscription')">🥛 Milk Subscription</button>
+          <button class="menu-item" onclick="go('helpLogin')">🤝 Shop Help (Password)</button>
+          <button class="menu-item" onclick="go('adminLogin')">➕ Add Item (Password)</button>
+          <!-- Cart removed from menu as requested -->
+        </div>
+      </div>
+
+      <div class="logo">FreshCart Grocery</div>
+    </div>
+
+    <!-- Cart OUTSIDE menu on top-right -->
+    <div class="top-right-actions">
+      <button class="cart-btn" onclick="go('cart')" aria-label="Open cart">
+        🛒 Cart <span class="count" id="cartCount">0</span>
+      </button>
+    </div>
+
+    <div class="delivery-badge">⚡ 30-Minute Delivery</div>
+  </header>
+
+  <!-- HOME -->
+  <main id="home" class="page active">
+    <section class="hero">
+      <h1>Fresh Groceries Delivered Fast</h1>
+      <p>100 grocery products • Quick delivery • Daily milk/curd subscription</p>
+      <br/>
+      <button class="primary" onclick="document.getElementById('shopSection').scrollIntoView()">Start Shopping</button>
+    </section>
+
+    <section class="banner">
+      <h2>🎁 Raksha Bandhan Special Offers</h2>
+      <p>Click any combo to add directly into your cart.</p>
+      <div id="offers" class="offer-grid"></div>
+    </section>
+
+    <section id="shopSection" class="container">
+      <h2 class="title">Shop 100 Grocery Items</h2>
+
+      <div class="controls">
+        <input id="search" placeholder="Search product or brand..." oninput="displayProducts()" />
+        <select id="category" onchange="displayProducts()">
+          <option value="all">All Categories</option>
+        </select>
+      </div>
+
+      <div id="products" class="products"></div>
+    </section>
+
+    <section class="container" style="margin-top:25px;">
+      <h2 class="title">Store Information</h2>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;">
+        <div class="box" style="margin:0;max-width:none;">
+          <h3 style="color:#14532d;margin-bottom:8px;">📍 Store Location</h3>
+          <p>Bangalore, Karnataka (replace with your address)</p>
+          <iframe
+            style="width:100%;height:260px;border:0;border-radius:8px;margin-top:10px;"
+            src="https://www.google.com/maps?q=Bangalore%20India&output=embed"
+            loading="lazy"></iframe>
+          <br/><br/>
+          <a href="https://www.google.com/maps" target="_blank" style="color:#166534;font-weight:bold;">Open Google Maps</a>
+        </div>
+
+        <div class="box" style="margin:0;max-width:none;">
+          <h3 style="color:#14532d;margin-bottom:8px;">⭐ Customer Reviews</h3>
+          <p>★★★★★ Priya: Fresh products, fast delivery.</p>
+          <p>★★★★★ Rahul: Best rice varieties & prices.</p>
+          <p>★★★★☆ Ananya: Easy ordering, good service.</p>
+          <br/>
+          <a href="https://www.google.com/maps" target="_blank" style="color:#166534;font-weight:bold;">View more reviews</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- CART -->
+  <main id="cart" class="page">
+    <section class="container">
+      <h2 class="title">Your Cart</h2>
+
+      <div id="cartItems"></div>
+      <div id="emptyCart" class="box" style="display:none;">
+        <h3 style="text-align:center;color:#14532d;">Your cart is empty</h3>
+        <br/>
+        <button class="primary" onclick="go('home')" style="display:block;margin:0 auto;">Continue Shopping</button>
+      </div>
+
+      <div id="cartBox" style="display:none;">
+        <div class="total">Total: ₹<span id="totalPrice">0</span></div>
+
+        <div class="box" style="margin:15px auto;">
+          <h3 style="color:#14532d;margin-bottom:10px;">Delivery Details</h3>
+          <div class="form">
+            <input id="customerName" placeholder="Name"/>
+            <input id="customerPhone" placeholder="Phone number"/>
+            <textarea id="customerAddress" rows="4" placeholder="Delivery address"></textarea>
+            <button class="primary" onclick="submitOrder()">Submit Order on WhatsApp</button>
+          </div>
+          <p style="margin-top:10px;color:#64748b;font-size:13px;">After submission, cart will be cleared and order will be saved in Shop Help.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- SUBSCRIPTION -->
+  <main id="subscription" class="page">
+    <section class="box">
+      <h2 class="title" style="margin-top:0;">🥛 Daily Milk and Curd Subscription</h2>
+
+      <div class="form" style="margin-top:10px;">
+        <label><input type="checkbox" id="milkChk"> Daily Milk</label>
+        <select id="milkQty">
+          <option value="500 ml - ₹30/day">500 ml - ₹30/day</option>
+          <option value="1 litre - ₹58/day">1 litre - ₹58/day</option>
+          <option value="2 litres - ₹112/day">2 litres - ₹112/day</option>
+        </select>
+
+        <label><input type="checkbox" id="curdChk"> Daily Curd</label>
+        <select id="curdQty">
+          <option value="400 grams - ₹35/day">400 grams - ₹35/day</option>
+          <option value="1 kg - ₹75/day">1 kg - ₹75/day</option>
+        </select>
+
+        <input id="subName" placeholder="Customer name"/>
+        <input id="subPhone" placeholder="Phone number"/>
+        <textarea id="subAddress" rows="4" placeholder="Daily delivery address"></textarea>
+
+        <button class="primary" onclick="startSubscription()">Start Subscription on WhatsApp</button>
+        <button class="secondary" onclick="notToday()">Not Today (Tell Shopkeeper)</button>
+      </div>
+    </section>
+  </main>
+
+  <!-- SHOP HELP LOGIN -->
+  <main id="helpLogin" class="page">
+    <section class="box">
+      <h2 class="title" style="margin-top:0;">🤝 Shop Help Login</h2>
+      <div class="form">
+        <input type="password" id="helpPassword" placeholder="Enter password"/>
+        <button class="primary" onclick="unlockHelp()">Open Shop Help</button>
+        <p id="helpErr" style="color:#dc2626;font-weight:bold;"></p>
+      </div>
+    </section>
+  </main>
+
+  <!-- SHOP HELP PAGE -->
+  <main id="shopHelp" class="page">
+    <section class="container">
+      <h2 class="title">Shop Help - Submitted Orders</h2>
+      <button class="secondary" onclick="lockHelp()">Lock Page</button>
+      <div id="orders" style="margin-top:18px;"></div>
+    </section>
+  </main>
+
+  <!-- ADMIN LOGIN -->
+  <main id="adminLogin" class="page">
+    <section class="box">
+      <h2 class="title" style="margin-top:0;">➕ Add Item Login</h2>
+      <div class="form">
+        <input type="password" id="adminPassword" placeholder="Enter password"/>
+        <button class="primary" onclick="unlockAdmin()">Open Add Item Page</button>
+        <p id="adminErr" style="color:#dc2626;font-weight:bold;"></p>
+      </div>
+    </section>
+  </main>
+
+  <!-- ADMIN PAGE -->
+  <main id="adminPage" class="page">
+    <section class="box">
+      <h2 class="title" style="margin-top:0;">Add New Grocery Item + Raksha Offers</h2>
+      <button class="secondary" onclick="lockAdmin()">Lock Page</button>
+
+      <div class="form" style="margin-top:14px;">
+        <input id="newName" placeholder="Item name"/>
+        <input id="newBrand" placeholder="Brand"/>
+        <input id="newCategory" placeholder="Category (e.g., Rice)" />
+        <input id="newImage" placeholder="Image URL"/>
+        <input id="newPrice" type="number" placeholder="Price"/>
+        <input id="newOldPrice" type="number" placeholder="Old price"/>
+        <input id="newDiscount" type="number" placeholder="Discount %" />
+        <button class="primary" onclick="addNewProduct()">Submit Item</button>
+        <p id="adminMsg" style="color:#166534;font-weight:bold;"></p>
+      </div>
+
+      <hr style="margin:18px 0; border:0; border-top:1px solid #e5e7eb;">
+
+      <h3 style="color:#14532d;">Dynamic Raksha Bandhan Offers</h3>
+      <div class="form" style="margin-top:10px;">
+        <input id="offerTitle" placeholder="Offer title"/>
+        <input id="offerDescription" placeholder="Offer description"/>
+        <input id="offerPrice" type="number" placeholder="Offer price"/>
+        <button class="primary" onclick="addOffer()">Add Offer</button>
+      </div>
+
+      <div id="adminOffers" style="margin-top:14px;"></div>
+    </section>
+  </main>
+
+  <!-- Small Chatbot Icon -->
+  <button class="chat-icon" onclick="toggleChatbot()" title="Chat with FreshCart">🤖</button>
+
+  <!-- Chatbot -->
+  <div id="chatbot">
+    <div class="chat-head">
+      <span>FreshCart Assistant</span>
+      <button class="close-chat" onclick="toggleChatbot()">×</button>
+    </div>
+    <div id="chatMessages" class="chat-messages">
+      <div class="msg bot">Ask about discounts, shop timings, brands, location, delivery, or milk/curd subscription.</div>
+    </div>
+    <div class="chat-input">
+      <input id="chatInput" placeholder="Type your question..." onkeydown="if(event.key==='Enter')sendChat()">
+      <button onclick="sendChat()">Send</button>
+    </div>
+  </div>
+
+  <footer>FreshCart Grocery | Open daily 7:00 AM - 10:00 PM | WhatsApp: 9980219407</footer>
+
+  <script>
+    // ---- CONFIG ----
+    const PASSWORD = "shop123";
+    const WHATSAPP = "919980219407";
+
+    // ---- NAV MENU ----
+    function toggleMenu(){
+      document.getElementById("topMenu").classList.toggle("open");
+    }
+    document.addEventListener("click",(e)=>{
+      const menu = document.getElementById("topMenu");
+      const btn = e.target.closest(".menu-btn");
+      if(!btn && menu && menu.classList.contains("open")) menu.classList.remove("open");
+    });
+
+    function go(pageId){
+      document.getElementById("topMenu").classList.remove("open");
+      showPage(pageId);
+    }
+
+    function showPage(id){
+      document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+      document.getElementById(id).classList.add("active");
+      window.scrollTo(0,0);
+
+      if(id==="cart") renderCart();
+      if(id==="shopHelp") renderOrders();
+      if(id==="adminPage") renderAdminOffers();
+    }
+
+    // ---- DATA ----
+    const CATEGORY_MAP = {
+      "Rice": ["India Gate Basmati Rice","Sona Masoori Rice","Brown Rice","Ponni Boiled Rice","Jeera Rice","Kolam Rice","Idli Rice","Matta Rice","Organic Rice","Everyday Rice"],
+      "Pulses":["Toor Dal","Moong Dal","Masoor Dal","Chana Dal","Urad Dal","Rajma","Kabuli Chana","Green Moong","Black Chana","Mixed Dal"],
+      "Flour":["Whole Wheat Atta","Multigrain Atta","Besan","Rice Flour","Ragi Flour","Maida","Sooji","Corn Flour","Bajra Flour","Jowar Flour"],
+      "Fruits":["Apples","Bananas","Oranges","Mangoes","Grapes","Pomegranate","Papaya","Watermelon","Guava","Pineapple"],
+      "Vegetables":["Tomatoes","Potatoes","Onions","Carrots","Beans","Cabbage","Cauliflower","Spinach","Capsicum","Green Peas"],
+      "Dairy":["Full Cream Milk","Toned Milk","Curd","Paneer","Butter","Cheese Slices","Ghee","Buttermilk","Flavoured Milk","Fresh Cream"],
+      "Snacks":["Potato Chips","Salted Biscuits","Cream Biscuits","Cookies","Namkeen","Popcorn","Chocolate Bar","Corn Flakes","Mixed Nuts","Energy Bar"],
+      "Beverages":["Tea Powder","Coffee Powder","Green Tea","Orange Juice","Mango Juice","Mineral Water","Soft Drink","Lemon Drink","Coconut Water","Hot Chocolate"],
+      "Cleaning":["Dishwash Liquid","Dishwash Bar","Laundry Powder","Liquid Detergent","Toilet Cleaner","Floor Cleaner","Glass Cleaner","Hand Wash","Bleaching Powder","Garbage Bags"],
+      "Personal Care":["Bath Soap","Neem Soap","Shampoo","Conditioner","Toothpaste","Toothbrush","Face Wash","Hair Oil","Hand Sanitizer","Body Lotion"]
+    };
+
+    const BRANDS = ["Amul","Nandini","Tata Sampann","Fortune","Aashirvaad","India Gate","Daawat","MTR","Britannia","Dove"];
+
+    function makeImage(name, category){
+      return `https://source.unsplash.com/seed/${encodeURIComponent(category+"-"+name)}/600x400`;
+    }
+
+    let products = [];
+    let cart = JSON.parse(localStorage.getItem("freshcart_cart") || "[]");
+    let orders = JSON.parse(localStorage.getItem("freshcart_orders") || "[]");
+    let rakshaOffers = JSON.parse(localStorage.getItem("freshcart_raksha_offers") || "[]");
+
+    if(!rakshaOffers.length){
+      rakshaOffers = [
+        { title:"Family Rice Combo", description:"5 kg rice + 1 kg dal", price:699 },
+        { title:"Sweet Celebration Combo", description:"Milk + sugar + dry fruits", price:849 },
+        { title:"Sibling Snack Combo", description:"Chips + chocolates + biscuits", price:399 }
+      ];
+      localStorage.setItem("freshcart_raksha_offers", JSON.stringify(rakshaOffers));
+    }
+
+    (function buildProducts(){
+      let id = 1;
+      Object.entries(CATEGORY_MAP).forEach(([category, list])=>{
+        list.forEach((name, idx)=>{
+          const brand = BRANDS[idx % BRANDS.length];
+          const price = 30 + idx*17 + category.length*5 + (Math.floor(Math.random()*6));
+          const oldPrice = Math.round(price*1.18);
+          const discount = 10 + (idx % 16);
+          products.push({
+            id:id++,
+            name,
+            brand,
+            category,
+            price,
+            oldPrice,
+            discount,
+            image: makeImage(name, category)
+          });
+        });
+      });
+
+      const custom = JSON.parse(localStorage.getItem("freshcart_custom_products") || "[]");
+      products = products.concat(custom);
+    })();
+
+    (function setupCategories(){
+      const sel = document.getElementById("category");
+      const cats = Object.keys(CATEGORY_MAP);
+      cats.forEach(c=>{
+        const opt = document.createElement("option");
+        opt.value=c; opt.textContent=c;
+        sel.appendChild(opt);
+      });
+    })();
+
+    // ---- PRODUCTS DISPLAY ----
+    function displayProducts(){
+      const q = document.getElementById("search").value.trim().toLowerCase();
+      const cat = document.getElementById("category").value;
+
+      const list = products.filter(p=>{
+        const matchQ = !q || p.name.toLowerCase().includes(q) || p.brand.toLowerCase().includes(q);
+        const matchC = cat==="all" || p.category===cat;
+        return matchQ && matchC;
+      });
+
+      const div = document.getElementById("products");
+      div.innerHTML = list.map(p=>`
+        <div class="card">
+          <img src="${p.image}" alt="${p.name}">
+          <div class="card-body">
+            <h3>${p.name}</h3>
+            <p>Brand: ${p.brand}</p>
+            <p>Category: ${p.category}</p>
+            <span class="discount">${p.discount}% OFF</span>
+            <p>
+              <span class="price">₹${p.price}</span>
+              <span class="old">₹${p.oldPrice}</span>
+            </p>
+            <button class="add" onclick="addToCart(${p.id})">Add to Cart</button>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    // ---- CART ----
+    function saveCart(){
+      localStorage.setItem("freshcart_cart", JSON.stringify(cart));
+      document.getElementById("cartCount").textContent =
+        cart.reduce((a,b)=>a+(b.quantity||0),0);
+    }
+
+    function addToCart(id){
+      const p = products.find(x=>x.id===id);
+      if(!p) return;
+
+      const item = cart.find(x=>x && x.id===id);
+      if(item) item.quantity = (item.quantity||0) + 1;
+      else cart.push({...p, quantity:1});
+
+      saveCart();
+      alert(p.name+" added to cart");
+      renderCart();
+    }
+
+    function changeQty(id, delta){
+      const item = cart.find(x=>x && x.id===id);
+      if(!item) return;
+      item.quantity = (item.quantity||0) + delta;
+      if(item.quantity<=0) cart = cart.filter(x=>x.id!==id);
+      saveCart();
+      renderCart();
+    }
+
+    function removeFromCart(id){
+      cart = cart.filter(x=>x.id!==id);
+      saveCart();
+      renderCart();
+    }
+
+    function renderCart(){
+      const itemsDiv = document.getElementById("cartItems");
+      const empty = document.getElementById("emptyCart");
+      const cartBox = document.getElementById("cartBox");
+
+      if(cart.length===0){
+        itemsDiv.innerHTML = "";
+        empty.style.display="block";
+        cartBox.style.display="none";
+        return;
+      }
+
+      empty.style.display="none";
+      cartBox.style.display="block";
+
+      itemsDiv.innerHTML = cart.map(x=>{
+        const lineTotal = Number(x.price)*Number(x.quantity||0);
+        return `
+          <div class="cart-item">
+            <div class="cart-left">
+              <b>${x.name}</b>
+              <span style="color:#64748b;font-size:13px;">${x.brand || ""}</span>
+            </div>
+
+            <div class="qty">
+              <button onclick="changeQty(${JSON.stringify(x.id)},-1)">−</button>
+              <b>${x.quantity}</b>
+              <button onclick="changeQty(${JSON.stringify(x.id)},1)">+</button>
+            </div>
+
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;">
+              <b>₹${lineTotal}</b>
+              <button class="remove" onclick="removeFromCart(${JSON.stringify(x.id)})">Remove</button>
+            </div>
+          </div>
+        `;
+      }).join("");
+
+      const total = cart.reduce((a,b)=>a + Number(b.price)*Number(b.quantity||0),0);
+      document.getElementById("totalPrice").textContent = total;
+      saveCart();
+    }
+
+    // ---- RAKSHABANDHAN COMBOS ----
+    function renderRakshaOffers(){
+      const wrap = document.getElementById("offers");
+      wrap.innerHTML = rakshaOffers.map((o, idx)=>`
+        <div class="offer">
+          <h3 style="margin-bottom:6px;">${escapeHtml(o.title)}</h3>
+          <p style="color:#fff9;font-size:13px;line-height:1.3;">${escapeHtml(o.description)}</p>
+          <p style="margin-top:10px;font-weight:bold;">Only ₹${o.price}</p>
+
+          <button
+            class="primary"
+            style="margin-top:10px;width:100%;"
+            onclick="addComboToCart(${idx})"
+          >
+            Add Combo to Cart
+          </button>
+        </div>
+      `).join("");
+    }
+
+    function addComboToCart(idx){
+      const offer = rakshaOffers[idx];
+      if(!offer) return;
+
+      const offerId = "offer-" + idx;
+
+      const existing = cart.find(x => x && x.id === offerId);
+      if(existing){
+        existing.quantity = (existing.quantity||0) + 1;
+      } else {
+        cart.push({
+          id: offerId,
+          name: offer.title,
+          brand: "Raksha Bandhan Special",
+          category: "Offer",
+          image: `https://source.unsplash.com/seed/raksha-offer-${idx}/600x400`,
+          price: Number(offer.price),
+          oldPrice: Number(offer.price),
+          discount: 0,
+          quantity: 1
+        });
+      }
+
+      saveCart();
+      renderCart();
+      alert("Combo added to cart: " + offer.title);
+    }
+
+    // ---- SUBMIT TO WHATSAPP + CLEAR CART + SAVE DETAILS ----
+    function submitOrder(){
+      const name = document.getElementById("customerName").value.trim();
+      const phone = document.getElementById("customerPhone").value.trim();
+      const address = document.getElementById("customerAddress").value.trim();
+
+      if(!cart.length) return alert("Cart is empty");
+      if(!name || !phone || !address) return alert("Please fill name, phone, and address.");
+
+      const total = cart.reduce((a,b)=>a + Number(b.price)*Number(b.quantity||0),0);
+
+      const order = {
+        id: "FC-"+Date.now(),
+        date: new Date().toLocaleString(),
+        customerName: name,
+        customerPhone: phone,
+        customerAddress: address,
+        items: JSON.parse(JSON.stringify(cart)),
+        total
+      };
+
+      orders.push(order);
+      localStorage.setItem("freshcart_orders", JSON.stringify(orders));
+
+      let message = "Hello FreshCart, I want to place an order:%0A%0A";
+      cart.forEach(it=>{
+        const qty = it.quantity || 0;
+        message += `${encodeURIComponent(it.name)} x ${qty} = ₹${Number(it.price)*qty}%0A`;
+      });
+      message += `%0ATotal: ₹${total}%0AOrder ID: ${order.id}%0AName: ${encodeURIComponent(name)}%0APhone: ${phone}%0AAddress: ${encodeURIComponent(address)}`;
+
+      window.open(`https://wa.me/${WHATSAPP}?text=${message}`, "_blank");
+
+      cart = [];
+      localStorage.removeItem("freshcart_cart");
+      saveCart();
+      renderCart();
+
+      alert("Order submitted to WhatsApp. Cart cleared. Check Shop Help for details.");
+      showPage("home");
+    }
+
+    // ---- MILK/CURD SUBSCRIPTION ----
+    function startSubscription(){
+      const milk = document.getElementById("milkChk").checked;
+      const curd = document.getElementById("curdChk").checked;
+
+      const subName = document.getElementById("subName").value.trim();
+      const subPhone = document.getElementById("subPhone").value.trim();
+      const subAddress = document.getElementById("subAddress").value.trim();
+
+      if(!milk && !curd) return alert("Select milk and/or curd.");
+      if(!subName || !subPhone || !subAddress) return alert("Fill subscription name, phone, and address.");
+
+      let msg = "Hello FreshCart, I want to start my daily subscription:%0A%0A";
+      if(milk) msg += `Milk: ${encodeURIComponent(document.getElementById("milkQty").value)}%0A`;
+      if(curd) msg += `Curd: ${encodeURIComponent(document.getElementById("curdQty").value)}%0A`;
+      msg += `%0AName: ${encodeURIComponent(subName)}%0APhone: ${encodeURIComponent(subPhone)}%0AAddress: ${encodeURIComponent(subAddress)}`;
+
+      window.open(`https://wa.me/${WHATSAPP}?text=${msg}`, "_blank");
+      alert("Subscription request sent on WhatsApp.");
+    }
+
+    function notToday(){
+      const subName = document.getElementById("subName").value.trim();
+      const subPhone = document.getElementById("subPhone").value.trim();
+      if(!subName || !subPhone) return alert("Enter name and phone on the subscription page first.");
+
+      const msg = `Hello FreshCart, I do not need my daily milk/curd delivery today.%0AName: ${encodeURIComponent(subName)}%0APhone: ${encodeURIComponent(subPhone)}`;
+      window.open(`https://wa.me/${WHATSAPP}?text=${msg}`, "_blank");
+      alert("Not Today message sent on WhatsApp.");
+    }
+
+    // ---- SHOP HELP ----
+    function unlockHelp(){
+      const p = document.getElementById("helpPassword").value;
+      const err = document.getElementById("helpErr");
+      if(p !== PASSWORD){ err.textContent="Incorrect password"; return; }
+      err.textContent="";
+      document.getElementById("helpPassword").value="";
+      showPage("shopHelp");
+      renderOrders();
+    }
+    function lockHelp(){ showPage("helpLogin"); }
+
+    function renderOrders(){
+      const wrap = document.getElementById("orders");
+      if(!orders.length){
+        wrap.innerHTML = `<div class="box" style="margin:0;max-width:none"><p style="text-align:center;color:#64748b;">No orders submitted yet.</p></div>`;
+        return;
+      }
+
+      wrap.innerHTML = orders.slice().reverse().map(o=>`
+        <div class="box" style="margin:14px 0;max-width:none;">
+          <h3 style="color:#14532d;">Order ID: ${o.id}</h3>
+          <p style="color:#64748b;margin-top:6px;">${o.date}</p>
+          <p><b>Name:</b> ${o.customerName}</p>
+          <p><b>Phone:</b> ${o.customerPhone}</p>
+          <p><b>Address:</b> ${o.customerAddress}</p>
+
+          <h4 style="margin-top:12px;color:#14532d;">Items</h4>
+          <ul style="margin-left:18px;margin-top:8px;">
+            ${o.items.map(it=>{
+              const qty = it.quantity || 0;
+              return `<li>${it.name} × ${qty} = ₹${Number(it.price)*qty}</li>`;
+            }).join("")}
+          </ul>
+
+          <p style="margin-top:10px;"><b>Total:</b> ₹${o.total}</p>
+        </div>
+      `).join("");
+    }
+
+    // ---- ADMIN ----
+    function unlockAdmin(){
+      const p = document.getElementById("adminPassword").value;
+      const err = document.getElementById("adminErr");
+      if(p !== PASSWORD){ err.textContent="Incorrect password"; return; }
+      err.textContent="";
+      document.getElementById("adminPassword").value="";
+      showPage("adminPage");
+      renderAdminOffers();
+      renderRakshaOffers();
+    }
+    function lockAdmin(){ showPage("adminLogin"); }
+
+    function addNewProduct(){
+      const name = document.getElementById("newName").value.trim();
+      const brand = document.getElementById("newBrand").value.trim();
+      const category = document.getElementById("newCategory").value.trim();
+      const image = document.getElementById("newImage").value.trim();
+      const price = Number(document.getElementById("newPrice").value);
+      const oldPrice = Number(document.getElementById("newOldPrice").value);
+      const discount = Number(document.getElementById("newDiscount").value);
+
+      const msg = document.getElementById("adminMsg");
+      msg.textContent="";
+
+      if(!name || !category || !image || !price || !oldPrice || !discount){
+        msg.style.color="#dc2626";
+        msg.textContent="Please fill item name, category, image, price, old price, discount.";
+        return;
+      }
+      if(!brand){
+        msg.style.color="#dc2626";
+        msg.textContent="Brand is required.";
+        return;
+      }
+
+      const newProduct = { id: Date.now(), name, brand, category, image, price, oldPrice, discount };
+
+      const custom = JSON.parse(localStorage.getItem("freshcart_custom_products") || "[]");
+      custom.push(newProduct);
+      localStorage.setItem("freshcart_custom_products", JSON.stringify(custom));
+
+      products.push(newProduct);
+
+      const catSel = document.getElementById("category");
+      if(![...catSel.options].some(o=>o.value===category)){
+        const opt = document.createElement("option");
+        opt.value = category;
+        opt.textContent = category;
+        catSel.appendChild(opt);
+      }
+
+      displayProducts();
+      msg.style.color="#166534";
+      msg.textContent="Item added to main shop.";
+
+      document.getElementById("newName").value="";
+      document.getElementById("newBrand").value="";
+      document.getElementById("newCategory").value="";
+      document.getElementById("newImage").value="";
+      document.getElementById("newPrice").value="";
+      document.getElementById("newOldPrice").value="";
+      document.getElementById("newDiscount").value="";
+    }
+
+    function addOffer(){
+      const title = document.getElementById("offerTitle").value.trim();
+      const description = document.getElementById("offerDescription").value.trim();
+      const price = document.getElementById("offerPrice").value.trim();
+
+      if(!title || !description || !price) return alert("Fill offer title, description, and price.");
+
+      rakshaOffers.push({ title, description, price: Number(price) });
+      localStorage.setItem("freshcart_raksha_offers", JSON.stringify(rakshaOffers));
+
+      document.getElementById("offerTitle").value="";
+      document.getElementById("offerDescription").value="";
+      document.getElementById("offerPrice").value="";
+
+      renderRakshaOffers();
+      renderAdminOffers();
+    }
+
+    function renderAdminOffers(){
+      const wrap = document.getElementById("adminOffers");
+      wrap.innerHTML = rakshaOffers.length
+        ? rakshaOffers.map((o, idx)=>`
+            <div style="background:#f0fdf4;padding:12px;border-radius:10px;margin-top:10px;border:1px solid #bbf7d0;">
+              <b>${escapeHtml(o.title)}</b>
+              <p>${escapeHtml(o.description)}</p>
+              <p><b>₹${o.price}</b></p>
+              <button class="remove" onclick="deleteOffer(${idx})" style="margin-top:6px;">Delete</button>
+            </div>
+          `).join("")
+        : `<p>No offers.</p>`;
+    }
+
+    function deleteOffer(idx){
+      rakshaOffers.splice(idx,1);
+      localStorage.setItem("freshcart_raksha_offers", JSON.stringify(rakshaOffers));
+      renderRakshaOffers();
+      renderAdminOffers();
+    }
+
+    // ---- CHATBOT ----
+    function toggleChatbot(){ document.getElementById("chatbot").classList.toggle("open"); }
+
+    function sendChat(){
+      const input = document.getElementById("chatInput");
+      const q = input.value.trim();
+      if(!q) return;
+      addChatMsg(q, "user");
+      input.value="";
+      setTimeout(()=> addChatMsg(getBotReply(q), "bot"), 250);
+    }
+
+    function addChatMsg(text, cls){
+      const box = document.getElementById("chatMessages");
+      const div = document.createElement("div");
+      div.className = "msg " + cls;
+      div.textContent = text;
+      box.appendChild(div);
+      box.scrollTop = box.scrollHeight;
+    }
+
+    function getBotReply(question){
+      const text = question.toLowerCase();
+      if(text.includes("time") || text.includes("open") || text.includes("close")){
+        return "We are open daily from 7:00 AM to 10:00 PM.";
+      }
+      if(text.includes("delivery") || text.includes("minutes") || text.includes("how long")){
+        return "We provide delivery within 30 minutes (service area).";
+      }
+      if(text.includes("brand")){
+        return "Popular brands: Amul, Nandini, Tata Sampann, Fortune, Aashirvaad, India Gate, Daawat, MTR, Britannia, Dove.";
+      }
+      if(text.includes("milk") || text.includes("curd") || text.includes("subscription")){
+        return "Use the Milk Subscription page. If you don't need it today, press “Not Today” to message the shopkeeper on WhatsApp.";
+      }
+      if(text.includes("discount") || text.includes("offer") || text.includes("rice")){
+        const rice = products.filter(p=>p.category==="Rice").slice(0,5);
+        if(!rice.length) return "I cannot find rice items right now.";
+        return "Rice deals: " + rice.map(r=>`${r.name} - ${r.discount}% OFF, ₹${r.price}`).join(" | ");
+      }
+      return "I can help with discounts/offers, shop timings, brands, location, 30-minute delivery, and milk/curd subscription.";
+    }
+
+    // ---- UTIL ----
+    function escapeHtml(s){
+      return String(s)
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+    }
+
+    // ---- INIT ----
+    saveCart();
+    displayProducts();
+    renderRakshaOffers();
+  </script>
+</body>
+</html>
+
+
+
